@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register - AlumniLink</title>
+  
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f4f4f4;
+    }
+
+    header {
+      background-color: #4CAF50;
+      color: white;
+      text-align: center;
+      padding: 1rem;
+    }
+
+    #register-section {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 80vh;
+    }
+
+    .register-form {
+      background-color: white;
+      padding: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      width: 300px;
+    }
+
+    .register-form h2 {
+      text-align: center;
+    }
+
+    .register-form input, .register-form select {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+
+    .register-form button {
+      width: 100%;
+      padding: 10px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .register-form button:hover {
+      background-color: #45a049;
+    }
+
+    .register-form p {
+      text-align: center;
+    }
+
+    .register-form a {
+      color: #4CAF50;
+      text-decoration: none;
+    }
+
+    .register-form a:hover {
+      text-decoration: underline;
+    }
+  </style>
+
+</head>
+<body>
+
+<header>
+  <h1>Create an Account on AlumniLink</h1>
+</header>
+
+<section id="register-section">
+  <div class="register-form">
+    <h2>Register</h2>
+    <input type="email" id="email" placeholder="Email" required>
+    <input type="password" id="password" placeholder="Password" required>
+    <input type="password" id="confirm-password" placeholder="Confirm Password" required>
+
+    <!-- Dropdown for Role selection -->
+    <select id="role" required>
+      <option value="" disabled selected>Select your role</option>
+      <option value="Student">Student</option>
+      <option value="Teacher">Teacher</option>
+      <option value="Alumni">Alumni</option>
+    </select>
+
+    <button type="button" id="registerBtn">Register</button>
+    <p>Already have an account? <a href="login.html">Login here</a></p>
+  </div>
+</section>
+
+<!-- Firebase Script -->
+<script type="module">
+  // Import necessary Firebase libraries
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-app.js";
+  import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-auth.js";
+  import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-database.js";
+  
+  // Firebase Configuration
+  const firebaseConfig = {
+    apiKey: "AIzaSyCHhlD6ACL5BmpCiEc45djneYCHbW4_qA0",
+    authDomain: "flexbase-f005f.firebaseapp.com",
+    databaseURL: "https://flexbase-f005f-default-rtdb.firebaseio.com",
+    projectId: "flexbase-f005f",
+    storageBucket: "flexbase-f005f.appspot.com",
+    messagingSenderId: "262222257146",
+    appId: "1:262222257146:web:7f7d361bc2446ae92c6243",
+    measurementId: "G-RN7B4JY2BS"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getDatabase(app);
+
+  // Register function
+  async function register() {
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    const confirmPassword = document.getElementById('confirm-password').value;
+    const role = document.getElementById('role').value;
+
+    if (email && password && confirmPassword && role) {
+      if (password === confirmPassword) {
+        try {
+          const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+          const user = userCredential.user;
+
+          // Store user data in Realtime Database
+          await set(ref(db, 'users/' + user.uid), {
+            email: email,
+            role: role
+          });
+
+          alert('Account created successfully!');
+          window.location.href = "login.html"; // Redirect to login page after successful registration
+        } catch (error) {
+          alert('Registration failed: ' + error.message);
+        }
+      } else {
+        alert('Passwords do not match');
+      }
+    } else {
+      alert('Please fill in all fields');
+    }
+  }
+
+  // Attach event listener for the register button
+  document.getElementById('registerBtn').addEventListener('click', register);
+
+</script>
+
+</body>
+</html>

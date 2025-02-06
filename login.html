@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - AlumniLink</title>
+  
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f4f4f4;
+    }
+
+    header {
+      background-color: #4CAF50;
+      color: white;
+      text-align: center;
+      padding: 1rem;
+    }
+
+    #login-section {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 80vh;
+    }
+
+    .login-form {
+      background-color: white;
+      padding: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      width: 300px;
+    }
+
+    .login-form h2 {
+      text-align: center;
+    }
+
+    .login-form input, .login-form select {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+
+    .login-form button {
+      width: 100%;
+      padding: 10px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .login-form button:hover {
+      background-color: #45a049;
+    }
+
+    .login-form p {
+      text-align: center;
+    }
+
+    .login-form a {
+      color: #4CAF50;
+      text-decoration: none;
+    }
+
+    .login-form a:hover {
+      text-decoration: underline;
+    }
+  </style>
+
+</head>
+<body>
+
+<header>
+  <h1>Login to AlumniLink</h1>
+</header>
+
+<section id="login-section">
+  <div class="login-form">
+    <h2>Login</h2>
+    <input type="email" id="email" placeholder="Email" required>
+    <input type="password" id="password" placeholder="Password" required>
+    
+    <!-- Dropdown for Role selection -->
+    <select id="role" required>
+      <option value="" disabled selected>Select your role</option>
+      <option value="Student">Student</option>
+      <option value="Teacher">Teacher</option>
+      <option value="Alumni">Alumni</option>
+    </select>
+
+    <button type="button" id="loginBtn">Login</button>
+    <p>Don't have an account? <a href="register.html">Register here</a></p>
+  </div>
+</section>
+
+<!-- Firebase Script -->
+<script type="module">
+  // Import necessary Firebase libraries
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-app.js";
+  import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-auth.js";
+  import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-database.js";
+  
+  // Firebase Configuration
+  const firebaseConfig = {
+    apiKey: "AIzaSyCHhlD6ACL5BmpCiEc45djneYCHbW4_qA0",
+    authDomain: "flexbase-f005f.firebaseapp.com",
+    databaseURL: "https://flexbase-f005f-default-rtdb.firebaseio.com",
+    projectId: "flexbase-f005f",
+    storageBucket: "flexbase-f005f.appspot.com",
+    messagingSenderId: "262222257146",
+    appId: "1:262222257146:web:7f7d361bc2446ae92c6243",
+    measurementId: "G-RN7B4JY2BS"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getDatabase(app);
+
+  // Login function
+  async function login() {
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    const role = document.getElementById('role').value;
+
+    if (email && password && role) {
+      try {
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+
+        // Fetch role from Realtime Database
+        const roleRef = ref(db, 'users/' + user.uid + '/role');
+        const snapshot = await get(roleRef);
+        
+        if (snapshot.exists()) {
+          const storedRole = snapshot.val();
+          
+          // Check if the selected role matches the stored role
+          if (storedRole === role) {
+            alert('Login successful!');
+            window.location.href = "index.html"; // Redirect to main page on successful login
+          } else {
+            alert('Role does not match with stored role. Please check your role.');
+          }
+        } else {
+          alert('No role found in the database for this user.');
+        }
+      } catch (error) {
+        alert('Login failed: ' + error.message);
+      }
+    } else {
+      alert('Please fill in all fields');
+    }
+  }
+
+  // Attach event listener for the login button
+  document.getElementById('loginBtn').addEventListener('click', login);
+
+</script>
+
+</body>
+</html>
