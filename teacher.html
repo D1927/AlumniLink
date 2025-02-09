@@ -273,94 +273,133 @@
   </section>
 
   
-<!-- Firebase Script -->
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-app.js";
-  import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-auth.js";
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-app.js";
+    import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-auth.js";
+    import { getDatabase, ref, set, remove, onValue } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-database.js";
   
-  // Firebase configuration
-  const firebaseConfig = {
-    apiKey: "AIzaSyCHhlD6ACL5BmpCiEc45djneYCHbW4_qA0",
-    authDomain: "flexbase-f005f.firebaseapp.com",
-    databaseURL: "https://flexbase-f005f-default-rtdb.firebaseio.com",
-    projectId: "flexbase-f005f",
-    storageBucket: "flexbase-f005f.appspot.com",
-    messagingSenderId: "262222257146",
-    appId: "1:262222257146:web:7f7d361bc2446ae92c6243",
-    measurementId: "G-RN7B4JY2BS"
-  };
-
-  // Initialize Firebase
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-
-  // Listen for authentication state changes
-  onAuthStateChanged(auth, (user) => {
-    if (user) {
-      // User is signed in
-      document.getElementById('user-email').textContent = user.email;
-      document.getElementById('user-email').onclick = toggleDropdown;  // Show dropdown on email click
-    } else {
-      // No user is signed in
-      document.getElementById('user-email').textContent = 'Login';
-      document.getElementById('user-email').onclick = () => { window.location.href = 'login.html'; };  // Redirect to login
-    }
-  });
-
-  // Toggle dropdown visibility
-  function toggleDropdown() {
-    const dropdown = document.getElementById('logout-dropdown');
-    dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
-  }
-
-  // Logout function
-  document.getElementById('logout-link').onclick = function() {
-    signOut(auth).then(() => {
-      alert('Logged out successfully!');
-      window.location.href = 'login.html';  // Redirect to login page after logging out
-    }).catch((error) => {
-      alert('Error: ' + error.message);
+    // Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyCHhlD6ACL5BmpCiEc45djneYCHbW4_qA0",
+      authDomain: "flexbase-f005f.firebaseapp.com",
+      databaseURL: "https://flexbase-f005f-default-rtdb.firebaseio.com",
+      projectId: "flexbase-f005f",
+      storageBucket: "flexbase-f005f.appspot.com",
+      messagingSenderId: "262222257146",
+      appId: "1:262222257146:web:7f7d361bc2446ae92c6243",
+      measurementId: "G-RN7B4JY2BS"
+    };
+  
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const database = getDatabase(app);
+  
+    // Listen for authentication state changes
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        document.getElementById('user-email').textContent = user.email;
+        document.getElementById('user-email').onclick = toggleDropdown;  
+      } else {
+        document.getElementById('user-email').textContent = 'Login';
+        document.getElementById('user-email').onclick = () => { window.location.href = 'login.html'; };  
+      }
     });
-  };
-
-  // Google Meet creation function
-  window.createMeeting = function() {  // Ensuring it's attached to window object
-    const googleMeetUrl = "https://meet.google.com/landing";
-    window.open(googleMeetUrl, "_blank");
-
-    setTimeout(() => {
+  
+    // Toggle dropdown visibility
+    function toggleDropdown() {
+      const dropdown = document.getElementById('logout-dropdown');
+      dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+    }
+  
+    // Logout function
+    document.getElementById('logout-link').onclick = function() {
+      signOut(auth).then(() => {
+        alert('Logged out successfully!');
+        window.location.href = 'login.html';  
+      }).catch((error) => {
+        alert('Error: ' + error.message);
+      });
+    };
+  
+    // Google Meet creation function
+    window.createMeeting = function() {  
+      const googleMeetUrl = "https://meet.google.com/landing";
+      window.open(googleMeetUrl, "_blank");
+  
+      setTimeout(() => {
+        const meetingLink = document.getElementById("google-meet-link");
+        const meetingSection = document.getElementById("meeting-link");
+  
+        meetingLink.href = "https://meet.google.com/xyz-abc-def"; // Simulated meeting link
+        meetingLink.textContent = "https://meet.google.com/enter-meeting-id-&-publish";
+        meetingSection.style.display = "block";
+  
+        document.getElementById("add-meeting-link").style.display = "block";
+      }, 3000);  
+    }
+  
+    // Function to delete the meeting link from Firebase globally
+    window.deleteMeeting = function() {  
+      const meetingSection = document.getElementById("meeting-link");
+      meetingSection.style.display = "none"; 
+  
+      // Remove the meeting link from Firebase globally
+      const meetingRef = ref(database, 'globalMeetingLink');  
+  
+      remove(meetingRef)
+        .then(() => {
+          alert('Meeting link deleted from the database for all users');
+        })
+        .catch((error) => {
+          alert('Error deleting meeting link: ' + error.message);
+        });
+    }
+  
+    // Function to publish the meeting link to Firebase globally
+    window.publishMeetingLink = function() {
+      const customLink = document.getElementById("custom-meeting-link").value;
+      if (customLink) {
+        const meetingLink = document.getElementById("google-meet-link");
+        meetingLink.href = customLink;
+        meetingLink.textContent = customLink;
+        document.getElementById("meeting-link").style.display = "block";  
+        document.getElementById("add-meeting-link").style.display = "none";  
+  
+        // Save the custom link to Firebase globally
+        const meetingRef = ref(database, 'globalMeetingLink');
+        set(meetingRef, {
+          link: customLink
+        })
+        .then(() => {
+          alert('Meeting link added to the database for all users');
+        })
+        .catch((error) => {
+          alert('Error saving meeting link: ' + error.message);
+        });
+      } else {
+        alert("Please enter a valid Google Meet link.");
+      }
+    }
+  
+    // Listen for changes to the meeting link in Firebase and update the page in real-time
+    const meetingRef = ref(database, 'globalMeetingLink');
+    onValue(meetingRef, (snapshot) => {
+      const meetingData = snapshot.val();
       const meetingLink = document.getElementById("google-meet-link");
       const meetingSection = document.getElementById("meeting-link");
-
-      meetingLink.href = "https://meet.google.com/xyz-abc-def"; // Simulated meeting link
-      meetingLink.textContent = "https://meet.google.com/enter-meeting-id-&-publish";
-      meetingSection.style.display = "block";
-
-      // Show the option to add a custom meeting link
-      document.getElementById("add-meeting-link").style.display = "block";
-    }, 3000);  // Simulate a delay for link generation
-  }
-
-  // Function to delete the meeting link
-  window.deleteMeeting = function() {  // Ensuring it's attached to window object
-    const meetingSection = document.getElementById("meeting-link");
-    meetingSection.style.display = "none"; // Hide the meeting link and delete button
-  }
-
-  // Function to publish custom meeting link
-  window.publishMeetingLink = function() {
-    const customLink = document.getElementById("custom-meeting-link").value;
-    if (customLink) {
-      const meetingLink = document.getElementById("google-meet-link");
-      meetingLink.href = customLink;
-      meetingLink.textContent = customLink;
-      document.getElementById("meeting-link").style.display = "block";  // Show the link
-      document.getElementById("add-meeting-link").style.display = "none";  // Hide the input form
-    } else {
-      alert("Please enter a valid Google Meet link.");
-    }
-  }
-</script>
+  
+      if (meetingData && meetingData.link) {
+        meetingLink.href = meetingData.link;
+        meetingLink.textContent = meetingData.link;
+        meetingSection.style.display = "block";
+      } else {
+        meetingSection.style.display = "none";  // Hide the meeting section if the link is deleted
+      }
+    });
+  
+  </script>
+  
 
 </body>
 </html>

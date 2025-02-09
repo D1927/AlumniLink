@@ -14,7 +14,7 @@
     }
 
     header {
-      background-color: #4CAF50;
+      background-color: #53d4de;
       color: white;
       text-align: center;
       padding: 1rem;
@@ -146,7 +146,13 @@
           // Check if the selected role matches the stored role
           if (storedRole === role) {
             alert('Login successful!');
-            window.location.href = "index.html"; // Redirect to main page on successful login
+            
+            // Redirect based on role
+            if (role === 'Student') {
+              window.location.href = "index.html"; // Redirect to index.html if role is student
+            } else {
+              window.location.href = "teacher.html"; // Redirect to teacher.html if role is teacher or alumni
+            }
           } else {
             alert('Role does not match with stored role. Please check your role.');
           }
