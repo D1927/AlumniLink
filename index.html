@@ -314,7 +314,9 @@
         <div class="chat-message">Welcome to the chat!</div>
       </div>
       <input type="text" id="chat-input" placeholder="Type a message...">
-      <button class="button" onclick="sendMessage()">Send</button>
+      <button id="send_button" class="button" type="button">Send</button>
+      <button onclick = "window.location.href='prev_ques.html'" type = "button">View Previous Questions</button>
+      <div id="questions-container"></div>
     </div>
   </div>
 </section>
@@ -400,6 +402,7 @@
   </div>
 </footer>
 
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-app.js";
@@ -423,14 +426,15 @@
   const auth = getAuth(app);
   const database = getDatabase(app);
 
-  // Listen for authentication state changes
+  // Check if user is logged in or not
   onAuthStateChanged(auth, (user) => {
     if (user) {
+      // If user is authenticated, show their email
       document.getElementById('user-email').textContent = user.email;
-      document.getElementById('user-email').onclick = toggleDropdown;  
+      document.getElementById('user-email').onclick = toggleDropdown;
     } else {
-      document.getElementById('user-email').textContent = 'Login';
-      document.getElementById('user-email').onclick = () => { window.location.href = 'login.html'; };  
+      // Redirect to login page if not authenticated
+      window.location.href = 'login.html';
     }
   });
 
@@ -526,7 +530,76 @@
     }
   });
 
-</script>
+  // Function to ask Question
+  function sendMessage() {
+  const messageInput = document.getElementById('chat-input');
+  const message = messageInput.value.trim();  
 
+  if (message) {
+
+    const new_Message = document.createElement('div');
+    new_Message.classList.add('chat-message');
+    new_Message.textContent = message;
+
+    const chat_container = document.getElementById('chat-messages');
+    chat_container.appendChild(new_Message);
+
+    chat_container.scrollTop = chat_container.scrollHeight;
+
+    messageInput.value = '';
+  }
+
+  const studentName = "IT";
+  console.log('Submitting message:', { student: studentName, question: message });
+
+}
+
+  document.getElementById('send_button').addEventListener('click', sendMessage); 
+
+  document.getElementById('chat-input').addEventListener('keypress', function(event) {
+    if (event.key === 'Enter') {
+      sendMessage();
+    }
+
+  });
+
+
+  async function submitQuestion(student, question) {
+    const response = await fetch('http://localhost:4000/questions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ student, question }),
+    });
+    const data = await response.json();
+    console.log(data);
+  }
+
+  const socket = io("http://localhost:4000");  
+
+document.addEventListener("DOMContentLoaded", () => {
+    console.log("Connected to WebSocket!");
+
+    socket.on("new_answer", (data) => {
+        console.log("New answer received:", data);
+
+        const chatMessages = document.getElementById("chat-messages");
+        if (!chatMessages) {
+            console.error("Chat messages container not found!");
+            return;
+        }
+
+        const answerElement = document.createElement("div");
+        answerElement.classList.add("chat-message");
+        answerElement.innerHTML = `<strong>${data.alumni}:</strong> ${data.answer}`;
+
+        chatMessages.appendChild(answerElement);
+
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    });
+});
+
+</script>
 </body>
 </html>
