@@ -120,7 +120,7 @@
     }
 
     .button {
-      background-color: #2f8682;
+      background-color: #4CAF50;
       color: white;
       padding: 10px 20px;
       text-align: center;
@@ -423,15 +423,14 @@
   const auth = getAuth(app);
   const database = getDatabase(app);
 
-  // Check if user is logged in or not
+  // Listen for authentication state changes
   onAuthStateChanged(auth, (user) => {
     if (user) {
-      // If user is authenticated, show their email
       document.getElementById('user-email').textContent = user.email;
-      document.getElementById('user-email').onclick = toggleDropdown;
+      document.getElementById('user-email').onclick = toggleDropdown;  
     } else {
-      // Redirect to login page if not authenticated
-      window.location.href = 'login.html';
+      document.getElementById('user-email').textContent = 'Login';
+      document.getElementById('user-email').onclick = () => { window.location.href = 'login.html'; };  
     }
   });
 
@@ -528,7 +527,6 @@
   });
 
 </script>
-
 
 </body>
 </html>
