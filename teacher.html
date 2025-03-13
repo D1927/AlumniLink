@@ -13,7 +13,7 @@
     }
 
     header {
-      background-color: #50b086;
+      background-color: #53d5dec9;
       color: white;
       display: flex;
       align-items: center;
@@ -120,7 +120,7 @@
     }
 
     .button {
-      background-color: #4CAF50;
+      background-color: #2f8682;
       color: white;
       padding: 10px 20px;
       text-align: center;
@@ -179,6 +179,36 @@
 
     .delete-btn:hover {
       background-color: darkred;
+    }
+
+    /* Chat section styles */
+    .chat-section {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .chat-section input, .chat-section button {
+      padding: 10px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+
+    .chat-messages {
+      margin-top: 20px;
+      height: 200px;
+      overflow-y: scroll;
+      border: 1px solid #ccc;
+      padding: 10px;
+      border-radius: 8px;
+    }
+
+    .chat-message {
+      background-color: #f1f1f1;
+      padding: 10px;
+      margin: 5px 0;
+      border-radius: 5px;
     }
 
     /* Flex container for side-by-side buttons */
@@ -251,8 +281,8 @@
 
 <section id="trends">
     <div class="card">
-      <h3>Current Meetings</h3>
-      <p>Stay updated with the latest trends in IT, Recruitment and Guidance Session</p>
+      <h3>Chatting Section</h3>
+      <p>The doubts of the student entered here and marked for solve.</p>
       
       <div class="meeting-section">
         <div class="button-container">
@@ -271,6 +301,35 @@
       </div>
     </div>
   </section>
+
+ <!-- Chat Section -->
+<section id="chat">
+  <div class="card">
+    <h3>Chat with Alumni</h3>
+    <div class="chat-section">
+      <div class="chat-messages" id="chat-messages">
+        <div class="chat-message">Welcome to the chat!</div>
+      </div>
+      <input type="text" id="chat-input" placeholder="Type a message...">
+      <button class="button" onclick="sendMessage()">Send</button>
+    </div>
+  </div>
+</section>
+
+<!-- Organizing Event Section -->
+<section id="organize-event">
+  <div class="card">
+    <h3>Organize an Event</h3>
+    <p>Planning an event? Submit your event details here!</p>
+    <form class="event-form">
+      <input type="text" placeholder="Event Title">
+      <textarea placeholder="Event Description"></textarea>
+      <input type="date" placeholder="Event Date">
+      <button class="button">Submit Event</button>
+    </form>
+  </div>
+</section>
+
 
   
   <script type="module">
