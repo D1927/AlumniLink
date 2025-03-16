@@ -613,7 +613,7 @@
       }
 
       async function updateChatWithAnswer(questionId, alumni, answer) {
-        console.log(`🔍 Checking if answer already exists in chat...`);
+        console.log(`Checking if answer already exists in chat...`);
 
         const chatMessages = document.getElementById("chat-messages");
 
@@ -624,7 +624,7 @@
         );
 
         if (existingMessage) {
-          console.warn("⚠️ Duplicate chat message detected, skipping...");
+          console.warn("Duplicate chat message detected, skipping...");
           return;
         }
 
@@ -649,7 +649,7 @@
           chatMessages.appendChild(messageElement);
           chatMessages.scrollTop = chatMessages.scrollHeight;
         } catch (error) {
-          console.error("❌ Error fetching question:", error.message);
+          console.error("Error fetching question:", error.message);
         }
       }
 
