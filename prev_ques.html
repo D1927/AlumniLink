@@ -46,7 +46,7 @@
 
             div.innerHTML = `<div class="question"><strong>Question:</strong> ${question.question}</div>`;
 
-            if (question.answers.length > 0) {
+            if (question.answers && question.answers.length > 0) {
               let answersHTML = "";
               question.answers.forEach((answer) => {
                 answersHTML += `<div class="answer"><strong>Answer:</strong> ${answer.answer}`;

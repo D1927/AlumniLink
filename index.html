@@ -321,20 +321,45 @@
       </div>
     </section>
 
-    <!-- Chat Section -->
     <section id="chat">
       <div class="card">
         <h3>Chat with Alumni</h3>
+
+        <div class="student-name-container">
+          <label for="student-name">Your Name:</label>
+          <input
+            type="text"
+            id="student-name"
+            placeholder="Enter your name..."
+          />
+          <button id="set-student-name" class="button">Set Name</button>
+        </div>
+        <div
+          id="student-name-display"
+          style="display: none; font-weight: bold; margin-top: 10px"
+        ></div>
+
         <div class="chat-section">
           <div class="chat-messages" id="chat-messages">
-            <div class="chat-message">Ask Your Questions!</div>
+            <div class="chat-message">Welcome to the chat!</div>
           </div>
-          <input type="text" id="chat-input" placeholder="Type a message..." />
-          <button id="send_button" class="button" type="button">Send</button>
-          <button onclick="window.location.href='prev_ques.html'" type="button">
+
+          <input
+            type="text"
+            id="question-input"
+            placeholder="Type your question..."
+          />
+          <button
+            id="send-question-button"
+            class="button"
+            type="button"
+            disabled
+          >
+            Send
+          </button>
+          <button id="view_pyq_button" class="button" type="button" disabled>
             View Previous Questions
           </button>
-          <div id="questions-container"></div>
         </div>
       </div>
     </section>
@@ -602,119 +627,174 @@
         }
       });
 
-      // Function to send a message (ask a question)
-      async function sendMessage() {
-        const messageInput = document.getElementById("chat-input");
-        const message = messageInput.value.trim();
-
-        if (!message) return;
-
-        const studentName = "IT";
-
-        try {
-          const response = await fetch("http://localhost:4000/questions", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ student: studentName, question: message }),
-          });
-
-          const data = await response.json();
-          console.log("Response from server:", data);
-
-          const new_Message = document.createElement("div");
-          new_Message.classList.add("chat-message");
-          new_Message.textContent = message;
-
-          new_Message.dataset.questionId = data.id;
-
-          const chat_container = document.getElementById("chat-messages");
-          chat_container.appendChild(new_Message);
-
-          messageInput.value = "";
-        } catch (error) {
-          console.error("Error submitting question:", error);
-        }
-      }
-
-      // Function to submit a question
-      async function submitQuestion(student, question) {
-        try {
-          const response = await fetch("http://localhost:4000/questions", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ student, question }),
-          });
-          const data = await response.json();
-          console.log("Submitted question:", data);
-        } catch (error) {
-          console.error("Error submitting question:", error);
-        }
-      }
-
-      document.addEventListener("DOMContentLoaded", () => {
-        console.log("Page loaded. Event listeners attached!");
-
-        const messageInput = document.getElementById("chat-input");
-        const sendButton = document.getElementById("send_button");
-
-        sendButton.addEventListener("click", sendMessage);
-
-        messageInput.addEventListener("keypress", function (event) {
-          if (event.key === "Enter") {
-            sendMessage();
-          }
-        });
-
+      document.addEventListener("DOMContentLoaded", async () => {
         const socket = io("http://localhost:4000");
 
-        console.log("Connected to WebSocket!");
+        let studentName = "";
 
-        socket.on("new_answer", async (data) => {
-          console.log("New Answer Received:", data);
+        // ✅ Get elements
+        const nameInput = document.getElementById("student-name");
+        const setNameButton = document.getElementById("set-student-name");
+        const sendQuestionButton = document.getElementById(
+          "send-question-button"
+        );
+        const questionInput = document.getElementById("question-input");
+        const chatMessages = document.getElementById("chat-messages");
+        const pyqButton = document.getElementById("view_pyq_button");
 
-          const chatMessages = document.getElementById("chat-messages");
+        sendQuestionButton.disabled = true;
+        pyqButton.disabled = true; // Initially disabled
 
-          let questionText = data.questionText;
-          if (!questionText) {
-            console.warn("Missing question text. Fetching from server...");
+        // ✅ Handle setting student name
+        function setStudentName() {
+          const enteredName = nameInput.value.trim();
+          if (!enteredName) return;
 
-            try {
-              const response = await fetch(
-                `http://localhost:4000/questions/${data.questionId}`
-              );
-              if (response.ok) {
-                const questionData = await response.json();
-                questionText = questionData.question;
-              }
-            } catch (error) {
-              console.error("Failed to fetch question text:", error);
-              questionText = "Unknown Question";
-            }
+          studentName = enteredName;
+          document.getElementById(
+            "student-name-display"
+          ).textContent = `Logged in as: ${studentName}`;
+          document.getElementById("student-name-display").style.display =
+            "block";
+
+          nameInput.style.display = "none";
+          setNameButton.style.display = "none";
+
+          checkButtonState();
+          console.log("✅ Student name set:", studentName);
+        }
+
+        setNameButton.addEventListener("click", setStudentName);
+
+        nameInput.addEventListener("keypress", (event) => {
+          if (event.key === "Enter") {
+            event.preventDefault();
+            setStudentName();
           }
-
-          let matchingQuestion = document.querySelector(
-            `.chat-message[data-question-id="${data.questionId}"]`
-          );
-
-          if (!matchingQuestion) {
-            console.warn(
-              `Question ID ${data.questionId} not found in chat. Creating it now...`
-            );
-
-            matchingQuestion = document.createElement("div");
-            matchingQuestion.classList.add("chat-message", "question-message");
-            matchingQuestion.dataset.questionId = data.questionId;
-            matchingQuestion.innerHTML = `<strong>Question:</strong> ${questionText} <br>`;
-
-            chatMessages.appendChild(matchingQuestion);
-          }
-
-          const answerElement = document.createElement("div");
-          answerElement.classList.add("chat-message", "answer-message");
-          answerElement.innerHTML = `<strong>Answer:</strong> ${data.answer} <br><br>`;
-
-          matchingQuestion.appendChild(answerElement);
         });
+
+        // ✅ Enable send button & PYQ button only when conditions met
+        function checkButtonState() {
+          sendQuestionButton.disabled = !(
+            studentName && questionInput.value.trim()
+          );
+          pyqButton.disabled = !studentName;
+        }
+
+        questionInput.addEventListener("input", checkButtonState);
+
+        // ✅ Handle sending a question
+        async function sendQuestion() {
+          const questionText = questionInput.value.trim();
+
+          if (!studentName) {
+            alert("Please enter your name first!");
+            return;
+          }
+          if (!questionText) {
+            alert("Please type a question!");
+            return;
+          }
+
+          try {
+            const response = await fetch("http://localhost:4000/questions", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                student: studentName,
+                question: questionText,
+              }),
+            });
+
+            if (!response.ok) {
+              const errorMessage = await response.text();
+              throw new Error(`HTTP ${response.status}: ${errorMessage}`);
+            }
+
+            const data = await response.json();
+            console.log("✅ Question Sent:", data);
+
+            // ✅ Show confirmation in chat
+            const messageElement = document.createElement("div");
+            messageElement.classList.add("chat-message");
+            messageElement.innerHTML = `<strong>You:</strong> ${questionText}`;
+            chatMessages.appendChild(messageElement);
+
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            questionInput.value = "";
+            checkButtonState();
+          } catch (error) {
+            console.error("❌ Error sending question:", error.message);
+          }
+        }
+
+        sendQuestionButton.addEventListener("click", sendQuestion);
+
+        questionInput.addEventListener("keypress", function (event) {
+          if (event.key === "Enter") {
+            event.preventDefault();
+            sendQuestion();
+          }
+        });
+
+        // ✅ "View Previous Questions" button opens a new tab
+        pyqButton.addEventListener("click", () => {
+          window.open("prev_ques.html", "_blank");
+        });
+
+        // ✅ Update student chat when alumni answer
+        socket.on("new_answer", (data) => {
+          console.log("✅ New Answer Received:", data);
+          updateStudentChat(data.questionId, data.alumni, data.answer);
+        });
+
+        function updateStudentChat(questionId, alumni, answer) {
+          fetch(`http://localhost:4000/questions/${questionId}`)
+            .then((response) => response.json())
+            .then((questionData) => {
+              const questionText = questionData.question;
+
+              const messageElement = document.createElement("div");
+              messageElement.classList.add("chat-message");
+
+              messageElement.innerHTML = `<strong>Question: </strong> ${questionText} <br>
+                                    <strong>Answer: </strong> ${answer} <br>
+                                    <em>- ${alumni}</em>`;
+
+              chatMessages.appendChild(messageElement);
+              chatMessages.scrollTop = chatMessages.scrollHeight;
+            })
+            .catch((error) =>
+              console.error("❌ Error fetching question:", error)
+            );
+        }
+
+        // ✅ Load previous Q&A on page load
+        async function fetchStudentChat() {
+          try {
+            const response = await fetch("http://localhost:4000/questions");
+            const questions = await response.json();
+
+            if (questions.length > 0) {
+              const latestQuestion = questions[questions.length - 1]; // ✅ Get the last question
+
+              if (latestQuestion.answers.length > 0) {
+                const latestAnswer =
+                  latestQuestion.answers[latestQuestion.answers.length - 1]; // ✅ Get the last answer
+
+                updateStudentChat(
+                  latestQuestion._id,
+                  latestAnswer.alumni,
+                  latestAnswer.answer
+                );
+              }
+            }
+          } catch (error) {
+            console.error("❌ Error loading student chat:", error);
+          }
+        }
+
+        fetchStudentChat(); // ✅ Load previous Q&A on page load
       });
     </script>
   </body>

@@ -1,32 +1,41 @@
 const express = require("express");
+const mongoose = require("mongoose");
 const cors = require("cors");
 const http = require("http");
-const { Server } = require("socket.io");
-const questionRoutes = require("./ask_a_question");  
+const socketIo = require("socket.io");
+const questionRoutes = require("./routes/questions"); // Import the updated questions API
 
 const app = express();
-app.use(express.json());
-app.use(cors());
-
 const server = http.createServer(app);
-const io = new Server(server, {
-    cors: { origin: "*", methods: ["GET", "POST"] }
+const io = socketIo(server, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST", "PATCH"],
+  },
 });
 
+// Middleware
+app.use(cors());
+app.use(express.json());
+
+// MongoDB Connection
+const mongoURI =
+  "mongodb+srv://deepikawalgude:rCrQKBfBuyLDVUJ1@cluster0.0jxuq.mongodb.net/AlumniDB?retryWrites=true&w=majority";
+
+mongoose
+  .connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true })
+  .then(() => console.log("✅ MongoDB Connected"))
+  .catch((err) => console.error("❌ MongoDB Connection Error:", err));
+
+// Attach Socket.io to requests
 app.use((req, res, next) => {
-    req.io = io;  
-    next();
+  req.io = io;
+  next();
 });
 
-app.use("/questions", questionRoutes);
+// Routes
+app.use("/questions", questionRoutes); // Now questions are stored in MongoDB
 
-io.on("connection", (socket) => {
-    console.log("A user connected");
-
-    socket.on("disconnect", () => {
-        console.log("A user disconnected");
-    });
-});
-
+// Start server
 const PORT = process.env.PORT || 4000;
-server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+server.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));

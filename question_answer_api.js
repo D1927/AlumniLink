@@ -1,35 +1,58 @@
 const express = require('express');
 const router = express.Router();
+const Question = require('../models/Question'); // Import the Question model
 
-var questions = [];
-
-router.get('/', (req, res) => {
-    res.json(questions);
+// ✅ Get all questions
+router.get('/', async (req, res) => {
+    try {
+        const questions = await Question.find();
+        res.json(questions);
+    } catch (err) {
+        res.status(500).json({ error: "Error fetching questions" });
+    }
 });
 
-router.post('/', (req, res) => {
+// ✅ Post a new question
+router.post('/', async (req, res) => {
     const { student, question } = req.body;
-    
+
     if (!student || !question) {
         return res.status(400).json({ error: "Valid Name and Question are Required!" });
     }
 
-    const newQuestion = {
-        id: questions.length + 1,
-        student,
-        question
-    };
+    try {
+        const newQuestion = new Question({ student, question });
+        await newQuestion.save();
 
-    questions.push(newQuestion);
+        if (req.io) {
+            req.io.emit("new_question", newQuestion);
+        }
 
-    if (req.io) {
-        req.io.emit("new_question", newQuestion);
+        res.status(201).json({ message: "Question posted successfully!", newQuestion });
+    } catch (err) {
+        res.status(500).json({ error: "Error saving question" });
     }
-
-    res.status(201).json({ message: "Question posted successfully!", newQuestion });
 });
 
-router.patch('/:id', (req, res) => {
+// ✅ Get a single question by ID
+router.get('/:id', async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const question = await Question.findById(id);
+
+        if (!question) {
+            return res.status(404).json({ error: "Question not found!" });
+        }
+
+        res.json(question);
+    } catch (err) {
+        res.status(500).json({ error: "Invalid question ID!" });
+    }
+});
+
+// ✅ Add an answer to a question
+router.patch('/:id', async (req, res) => {
     const { id } = req.params;
     const { alumni, answer } = req.body;
 
@@ -37,35 +60,24 @@ router.patch('/:id', (req, res) => {
         return res.status(400).json({ error: "Valid Alumni name and Answer are required!" });
     }
 
-    const question = questions.find(q => q.id == id);
+    try {
+        const question = await Question.findById(id);
 
-    if (!question) {
-        return res.status(404).json({ error: "Question not found!" });
+        if (!question) {
+            return res.status(404).json({ error: "Question not found!" });
+        }
+
+        question.answers.push({ alumni, answer });
+        await question.save();
+
+        if (req.io) {
+            req.io.emit("new_answer", { questionId: id, alumni, answer });
+        }
+
+        res.json({ message: "Answer added successfully!", question });
+    } catch (err) {
+        res.status(500).json({ error: "Invalid question ID!" });
     }
-
-    if (!question.answers) {
-        question.answers = [];
-    }
-
-    question.answers.push({ alumni, answer });
-
-    if (req.io) {
-        req.io.emit("new_answer", { questionId: id, alumni, answer });
-    }
-
-    res.json({ message: "Answer added successfully!", question });
-});
-
-router.get('/:id', (req, res) => {
-    const { id } = req.params;
-    const question = questions.find(q => q.id == id);
-
-    if (!question) {
-        return res.status(404).json({ error: "Question not found!" });
-    }
-
-    res.json(question);
 });
 
 module.exports = router;
-
