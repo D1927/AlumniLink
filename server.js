@@ -20,7 +20,7 @@ app.use(express.json());
 
 // MongoDB Connection
 const mongoURI =
-  "mongodb+srv://deepikawalgude:rCr@cluster0.0jxuq.mongodb.net/Alumni?retryWrites=true&w=majority";
+  "mongodb+srv://dee:rCr@cluster0.0jxuq.mongodb.net/Alumni?retryWrites=true&w=majority";
 
 mongoose
   .connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true })
